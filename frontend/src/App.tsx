@@ -1,24 +1,44 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+// frontend/src/App.tsx
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 function App() {
+  const [notes, setNotes] = useState([]);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+
+  useEffect(() => {
+    axios.get('http://localhost:5000/notes')
+      .then(response => setNotes(response.data))
+      .catch(error => console.error(error));
+  }, []);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    axios.post('http://localhost:5000/notes', { title, content })
+      .then(() => {
+        setTitle('');
+        setContent('');
+        axios.get('http://localhost:5000/notes')
+          .then(response => setNotes(response.data))
+          .catch(error => console.error(error));
+      })
+      .catch(error => console.error(error));
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>Notes App</h1>
+      <form onSubmit={handleSubmit}>
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" />
+        <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Content" />
+        <button type="submit">Add Note</button>
+      </form>
+      <ul>
+        {notes.map(note => (
+          <li key={note.id}>{note.title} - {note.content}</li>
+        ))}
+      </ul>
     </div>
   );
 }
